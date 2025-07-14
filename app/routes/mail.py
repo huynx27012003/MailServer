@@ -18,6 +18,7 @@ from email.mime.text import MIMEText
 
 from app.services import jwt_service
 from app.services.session_store import get, set as store_password
+from app.services.websocket_service import websocket_manager
 
 IMAP_HOST = "172.20.210.50"
 IMAP_PORT = 993
@@ -382,6 +383,11 @@ async def send_mail(
         server = smtplib.SMTP("172.20.210.50", 25)
         server.sendmail(from_addr, [to_addr], msg.as_string())
         server.quit()
+
+        # Notify recipient about new email realtime
+        recipient = to_clean.split("@")[0]
+        await websocket_manager.notify_new_email(recipient)
+
         attachment_info = f" with {len(files)} attachments" if files else ""
         return {"message": f"✅ Email sent successfully{attachment_info}"}
     except Exception as e:
@@ -408,6 +414,11 @@ async def send_mail_simple(data: SendMailRequest, token=Depends(security)):
         server = smtplib.SMTP("172.20.210.50", 25)
         server.sendmail(from_addr, [to_addr], msg.as_string())
         server.quit()
+        
+        # After sending mail successfully:
+        recipient = to_clean.split("@")[0]  # Fix here: use to_clean instead of to
+        await websocket_manager.notify_new_email(recipient)
+        
         return {"message": "✅ Email sent successfully"}
     except Exception as e:
         logging.error("❌ Failed to send email", exc_info=True)

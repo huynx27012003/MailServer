@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from app.services import jwt_service, imap_service, laoid_service
 from app.services.jwt_service import get_current_user
 from app.services.session_store import set as store_password
+from app.services.imap_idle import start_idle_for_user  # <-- import thêm
 import subprocess
 import os
 
@@ -42,6 +43,10 @@ def login(request: LoginRequest):
         store_password(username, request.password)
         token = jwt_service.create_token(request.username)
         print(f"✅ Đăng nhập thủ công: {request.username}")
+
+        # Khởi động IMAP IDLE listener cho user này
+        start_idle_for_user(username, request.password)
+
         return {"token": token}
     else:
         raise HTTPException(status_code=401, detail="Invalid credentials")

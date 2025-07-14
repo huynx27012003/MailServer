@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import auth, mail
+from app.routes import auth, mail, websocket
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -34,3 +34,4 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(mail.router)
+app.include_router(websocket.router)
