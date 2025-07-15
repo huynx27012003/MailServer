@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import auth, mail, websocket
+from app.routes import auth, mail, websocket, sent
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -24,9 +24,9 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,            # ✅ Cho phép các origin cụ thể
+    allow_origins=origins,           
     allow_credentials=True,
-    allow_methods=["*"],              # GET, POST, etc.
+    allow_methods=["*"],              
     allow_headers=["*"],
 )
 
@@ -34,4 +34,5 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(mail.router)
+app.include_router(sent.router)
 app.include_router(websocket.router)
