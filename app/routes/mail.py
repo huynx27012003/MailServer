@@ -373,6 +373,10 @@ async def send_mail(
         server = smtplib.SMTP("172.20.210.50", 25)
         server.sendmail(from_addr, [to_addr], msg.as_string())
         server.quit()
+        password = get_user_password(username)
+        save_to_sent_folder(username, password, msg)
+
+        
 
         # Notify recipient about new email realtime
         recipient = to_clean.split("@")[0]
@@ -383,6 +387,15 @@ async def send_mail(
     except Exception as e:
         logging.error("❌ Failed to send email", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+def save_to_sent_folder(username: str, password: str, msg):
+    try:
+        with imaplib.IMAP4(IMAP_HOST, IMAP_PORT) as imap:
+            imap.login(username, password)
+            imap.append("Sent", '', imaplib.Time2Internaldate(time.time()), msg.as_bytes())
+            imap.logout()
+            print("✅ Đã lưu email vào thư mục Sent")
+    except Exception as e:
+        print(f"❌ Không thể lưu vào Sent: {e}")
 
 # ----- Send mail (simple, backward compatibility) -----
 @router.post("/send-mail-simple")
