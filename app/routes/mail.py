@@ -21,7 +21,7 @@ from app.services.session_store import get, set as store_password
 from app.services.websocket_service import websocket_manager
 
 IMAP_HOST = "172.20.210.50"
-IMAP_PORT = 993
+IMAP_PORT = 143
 
 router = APIRouter(prefix="/mails")
 security = HTTPBearer()
@@ -29,18 +29,17 @@ security = HTTPBearer()
 def login_imap(email_user: str, password: str) -> bool:
     try:
         print(f"[LOGIN_IMAP] Trying login with: {repr(email_user)} / {repr(password)}")
-        username = email_user.split("@")[0]
-        mail = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT)
+        username = email_user
+        mail = imaplib.IMAP4(IMAP_HOST, IMAP_PORT)
         mail.login(username, password)
         mail.logout()
         return True
     except Exception as e:
         print(f"❌ IMAP login error: {e}")
         return False
-
 def fetch_mails(username: str, password: str) -> list:
     try:
-        mail = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT)
+        mail = imaplib.IMAP4(IMAP_HOST, IMAP_PORT)
         mail.login(username, password)
         mail.select("INBOX", readonly=True)
         result, data = mail.search(None, "ALL")
@@ -100,7 +99,7 @@ def fetch_mail_detail(username: str, password: str, uid: str) -> dict:
         dict: Email details with UID, from, subject, date, body, and attachments.
     """
     try:
-        mail = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT)
+        mail = imaplib.IMAP4(IMAP_HOST, IMAP_PORT)
         mail.login(username, password)
         mail.select("INBOX", readonly=True)
 
@@ -231,20 +230,11 @@ def fetch_mail_detail(username: str, password: str, uid: str) -> dict:
             "attachments": []
         }
 
-def create_imap_user(username: str, password: str) -> bool:
-    try:
-        cmd = f"sudo useradd {username} -m -s /sbin/nologin && echo '{username}:{password}' | sudo chpasswd"
-        subprocess.run(["bash", "-c", cmd], check=True)
-        print(f"✅ Created user: {username}")
-        return True
-    except Exception as e:
-        print(f"❌ Failed to create user {username}: {e}")
-        return False
 
 def get_user_password(username: str) -> str:
     password = get(username)
     if not password:
-        default_passwords = ["1", "123456789"]
+        default_passwords = ["Huyhuhong123@"]
         for default_pass in default_passwords:
             if login_imap(username, default_pass):
                 password = default_pass
@@ -260,7 +250,7 @@ def get_user_password(username: str) -> str:
 def list_mails(token=Depends(security)):
     username = jwt_service.decode_token(token.credentials).strip()
     if '@' in username:
-        username = username.split("@")[0]
+        username = username
     password = get_user_password(username)
     return fetch_mails(username, password)
 
@@ -269,7 +259,7 @@ def list_mails(token=Depends(security)):
 def search_mails(keyword: str, token=Depends(security)):
     username = jwt_service.decode_token(token.credentials).strip()
     if '@' in username:
-        username = username.split("@")[0]
+        username = username
     password = get_user_password(username)
     try:
         print(f"🔍 [API] Searching mails for {username} with keyword: {keyword}")
@@ -307,7 +297,7 @@ def search_mails(keyword: str, token=Depends(security)):
 def get_mail_detail(uid: str, token=Depends(security)):
     username = jwt_service.decode_token(token.credentials).strip()
     if '@' in username:
-        username = username.split("@")[0]
+        username = username
     password = get_user_password(username)
     try:
         print(f"📨 [API] Get mail detail for {username}, UID={uid}")
@@ -323,7 +313,7 @@ def get_mail_detail(uid: str, token=Depends(security)):
 def download_attachment(uid: str, filename: str, token=Depends(security)):
     username = jwt_service.decode_token(token.credentials).strip()
     if '@' in username:
-        username = username.split("@")[0]
+        username = username
     password = get_user_password(username)
     try:
         mail_detail = fetch_mail_detail(username, password, uid)
@@ -361,7 +351,7 @@ async def send_mail(
     try:
         username = jwt_service.decode_token(token.credentials).strip()
         if '@' in username:
-            username = username.split("@")[0]
+            username = username
         from_addr = f"{username}@localhost"
         to_clean = to.strip()
         if not to_clean or to_clean.lower() == "undefined":
@@ -400,7 +390,7 @@ async def send_mail_simple(data: SendMailRequest, token=Depends(security)):
     try:
         username = jwt_service.decode_token(token.credentials).strip()
         if '@' in username:
-            username = username.split("@")[0]
+            username = username
         from_addr = f"{username}@localhost"
         to_clean = data.to.strip()
         if not to_clean or to_clean.lower() == "undefined":

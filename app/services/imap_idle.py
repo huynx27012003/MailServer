@@ -5,7 +5,7 @@ import asyncio
 from app.services.websocket_service import websocket_manager
 
 IMAP_HOST = "172.20.210.50"
-IMAP_PORT = 993
+IMAP_PORT = 143
 
 class ImapIdleListener(threading.Thread):
     def __init__(self, username: str, password: str):
@@ -18,7 +18,7 @@ class ImapIdleListener(threading.Thread):
     def run(self):
         while self.running:
             try:
-                self.mail = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT)
+                self.mail = imaplib.IMAP4(IMAP_HOST, IMAP_PORT)
                 self.mail.login(self.username, self.password)
                 self.mail.select("INBOX", readonly=True)
                 print(f"[IMAP IDLE] Started IDLE for {self.username}")

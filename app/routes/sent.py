@@ -12,7 +12,7 @@ from app.services import jwt_service
 from app.services.session_store import get
 
 IMAP_HOST = "172.20.210.50"
-IMAP_PORT = 993
+IMAP_PORT = 143
 
 router = APIRouter(prefix="/sent")
 security = HTTPBearer()
@@ -61,7 +61,7 @@ def list_sent_mails(token=Depends(security)):
     password = get_user_password(username)
 
     try:
-        mail = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT)
+        mail = imaplib.IMAP4(IMAP_HOST, IMAP_PORT)
         mail.login(username, password)
 
         sent_folder = find_sent_folder(mail)
@@ -111,7 +111,7 @@ def get_sent_mail_detail(uid: str, token=Depends(security)):
     password = get_user_password(username)
 
     try:
-        mail = imaplib.IMAP4_SSL(IMAP_HOST, IMAP_PORT)
+        mail = imaplib.IMAP4(IMAP_HOST, IMAP_PORT)
         mail.login(username, password)
 
         sent_folder = find_sent_folder(mail)

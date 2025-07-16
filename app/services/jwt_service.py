@@ -1,4 +1,4 @@
-## app/services/jwt_service.py
+# 📁 app/services/jwt_service.py
 from fastapi import Request, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 SECRET_KEY = "sfsdfdsfsfsfsfs"
 ALGORITHM = "HS256"
-EXPIRATION = 60 * 60  # 1 hour
+EXPIRATION = 60 * 60
 
 security = HTTPBearer()
 
@@ -17,9 +17,6 @@ def create_token(username: str) -> str:
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-from fastapi import HTTPException
-import jwt
-
 def decode_token(token: str) -> str:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -29,11 +26,9 @@ def decode_token(token: str) -> str:
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=403, detail="Invalid token")
 
-# ✅ sửa thành async def và await security()
 async def get_current_user(request: Request):
     credentials: HTTPAuthorizationCredentials = await security(request)
     token = credentials.credentials
-
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload.get("sub")
